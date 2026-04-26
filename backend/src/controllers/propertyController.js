@@ -1,67 +1,105 @@
 const Property = require('../models/Property');
 
-exports.createProperty = async (req, res) => {
+/**
+ * Property Controller
+ * Handles logic for property retrieval and management.
+ */
+const propertyController = {
+  /**
+   * Get all properties
+   */
+  getProperties: async (req, res) => {
     try {
-        const property = await Property.create({
-            ...req.body,
-            owner: req.user.id
-        });
-        res.status(201).json({
-            status: 'success',
-            data: { property }
-        });
-    } catch (err) {
-        res.status(400).json({
-            status: 'fail',
-            message: err.message
-        });
+      const { city, minRent, maxRent, type } = req.query;
+      let query = {};
+
+      if (city) query.city = new RegExp(city, 'i');
+      if (type && type !== 'all') query.type = type.toUpperCase();
+      if (minRent || maxRent) {
+        query.rent = {};
+        if (minRent) query.rent.$gte = Number(minRent);
+        if (maxRent) query.rent.$lte = Number(maxRent);
+      }
+
+      const properties = await Property.find(query).populate('owner', 'name email');
+      res.status(200).json(properties);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
+  },
+
+  /**
+   * Get property by ID
+   */
+  getPropertyById: async (req, res) => {
+    try {
+      const property = await Property.findById(req.params.id).populate('owner', 'name email');
+      if (!property) return res.status(404).json({ message: 'Property not found' });
+      res.status(200).json(property);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  /**
+   * Create property
+   */
+  createProperty: async (req, res) => {
+    try {
+      const newProperty = new Property({
+        ...req.body,
+        owner: req.user.id // Assuming auth middleware sets req.user
+      });
+      const savedProperty = await newProperty.save();
+      res.status(201).json(savedProperty);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  /**
+   * Update property
+   */
+  updateProperty: async (req, res) => {
+    try {
+      const property = await Property.findById(req.params.id);
+      if (!property) return res.status(404).json({ message: 'Property not found' });
+      
+      // Check ownership
+      if (property.owner.toString() !== req.user.id) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+
+      const updatedProperty = await Property.findByIdAndUpdate(
+        req.params.id,
+        { $set: req.body },
+        { new: true }
+      );
+      res.status(200).json(updatedProperty);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  /**
+   * Delete property
+   */
+  deleteProperty: async (req, res) => {
+    try {
+      const property = await Property.findById(req.params.id);
+      if (!property) return res.status(404).json({ message: 'Property not found' });
+
+      // Check ownership
+      if (property.owner.toString() !== req.user.id) {
+        return res.status(403).json({ message: 'Unauthorized' });
+      }
+
+      await Property.findByIdAndDelete(req.params.id);
+      res.status(200).json({ message: 'Property deleted' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
 };
 
-exports.getAllProperties = async (req, res) => {
-    try {
-        const properties = await Property.find().populate('owner', 'firstName lastName email');
-        res.status(200).json({
-            status: 'success',
-            results: properties.length,
-            data: { properties }
-        });
-    } catch (err) {
-        res.status(400).json({
-            status: 'fail',
-            message: err.message
-        });
-    }
-};
-
-exports.getAIRecommendations = async (req, res) => {
-    try {
-        // In a real scenario, this would use a machine learning model or LLM
-        // We'll simulate this by matching user preferences with property features
-        const { preferences } = req.body; // e.g., { city: 'New York', maxPrice: 3000, pets: true }
-        
-        let query = { status: 'available' };
-        
-        if (preferences.city) query['location.city'] = new RegExp(preferences.city, 'i');
-        if (preferences.maxPrice) query.price = { $lte: preferences.maxPrice };
-        if (preferences.pets) query['features.petFriendly'] = true;
-
-        const properties = await Property.find(query).limit(5);
-
-        // Add a mock "Match Score"
-        const recommendations = properties.map(p => ({
-            ...p.toObject(),
-            matchScore: Math.floor(Math.random() * (100 - 85 + 1) + 85) // Random score between 85-100
-        })).sort((a, b) => b.matchScore - a.matchScore);
-
-        res.status(200).json({
-            status: 'success',
-            data: { recommendations }
-        });
-    } catch (err) {
-        res.status(400).json({
-            status: 'fail',
-            message: err.message
-        });
-    }
-};
+module.exports = propertyController;
