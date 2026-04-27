@@ -105,13 +105,13 @@ const Signup = () => {
       
       const backendRole = response.user.role;
       const routeMap = {
-        'RENTER': 'tenant',
+        'RENTER': 'renter',
         'OWNER': 'owner',
         'SERVICE': 'service',
         'INSPECTOR': 'inspector',
         'ADMIN': 'admin'
       };
-      const dashboardPrefix = routeMap[backendRole] || 'tenant';
+      const dashboardPrefix = routeMap[backendRole] || 'renter';
       
       dispatch(loginSuccess({ user: response.user, token: response.token }));
       localStorage.setItem('rentify_user_role', backendRole.toLowerCase());
