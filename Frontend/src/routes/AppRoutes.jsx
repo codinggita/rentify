@@ -49,7 +49,7 @@ const AppRoutes = () => {
           <Route path="/welcome/:role" element={<PersonaLanding />} />
           <Route path="/listings" element={<ListingPage />} />
           <Route path="/properties" element={<PropertiesPage />} />
-          {['/dashboard', '/tenant-dashboard', '/owner-dashboard', '/inspector-dashboard', '/service-dashboard', '/admin-dashboard'].map((path) => (
+          {['/dashboard', '/tenant-dashboard', '/renter-dashboard', '/owner-dashboard', '/inspector-dashboard', '/service-dashboard', '/admin-dashboard'].map((path) => (
             <Route 
               key={path}
               path={path} 

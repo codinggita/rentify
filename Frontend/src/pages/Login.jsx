@@ -44,13 +44,13 @@ const Login = () => {
       
       const backendRole = response.user.role;
       const routeMap = {
-        'RENTER': 'tenant',
+        'RENTER': 'renter',
         'OWNER': 'owner',
         'SERVICE': 'service',
         'INSPECTOR': 'inspector',
         'ADMIN': 'admin'
       };
-      const dashboardPrefix = routeMap[backendRole] || 'tenant';
+      const dashboardPrefix = routeMap[backendRole] || 'renter';
 
       localStorage.setItem('rentify_user_role', backendRole.toLowerCase());
       
