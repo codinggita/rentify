@@ -15,6 +15,7 @@ const userRoutes = require('./routes/users');
 const dashboardRoutes = require('./routes/dashboard');
 const chatRoutes = require('./routes/chat');
 const inspectionRoutes = require('./routes/inspections');
+const workflowRoutes = require('./routes/workflow');
 
 // Connect to Database
 connectDB();
@@ -68,6 +69,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/inspections', inspectionRoutes);
+app.use('/api/workflow', workflowRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
