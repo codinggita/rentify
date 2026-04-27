@@ -28,7 +28,7 @@ const CLIENT_ORIGIN = process.env.CLIENT_URL || 'http://localhost:5173';
 // ── Socket.io setup ──────────────────────────────────────────
 const io = new Server(httpServer, {
   cors: { 
-    origin: [CLIENT_ORIGIN, 'http://localhost:5173', 'http://localhost:3000'], 
+    origin: [CLIENT_ORIGIN, 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'], 
     credentials: true 
   }
 });
@@ -55,7 +55,7 @@ io.on('connection', (socket) => {
 
 app.use(helmet());
 app.use(cors({ 
-  origin: [CLIENT_ORIGIN, 'http://localhost:5173', 'http://localhost:3000'], 
+  origin: [CLIENT_ORIGIN, 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'], 
   credentials: true 
 }));
 app.use(express.json());
@@ -73,4 +73,24 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Dat
 
 app.use(errorHandler);
 
+// ─────────────────────────────────────────────────────────────
+// Error handling for port conflict
+httpServer.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. Please kill the process or wait a few seconds.`);
+  } else {
+    console.error('❌ Server error:', e);
+  }
+});
+
 httpServer.listen(PORT, () => console.log(`Rentify API running on port ${PORT} with Socket.io`));
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  httpServer.close(() => {
+    console.log('Server closed.');
+    process.exit(0);
+  });
+});
+
