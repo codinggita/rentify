@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
   },
   phone: { type: String },
   rating: { type: Number, default: 4.5 },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
