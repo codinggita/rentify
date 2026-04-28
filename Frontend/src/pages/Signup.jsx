@@ -133,7 +133,7 @@ const Signup = () => {
 
       // Trigger WhatsApp Welcome
       setTimeout(() => {
-        sendWhatsAppWelcome(response.user.name, response.user.phone || formData.phone);
+        sendWhatsAppWelcome(response.user.name, response.user.role, response.user.phone || formData.phone);
       }, 1500);
 
       navigate(`/${dashboardPrefix}-dashboard`);

@@ -61,7 +61,7 @@ const Login = () => {
     // Trigger WhatsApp Welcome for new users
     if (response.isNewUser) {
       setTimeout(() => {
-        sendWhatsAppWelcome(response.user.name, response.user.phone);
+        sendWhatsAppWelcome(response.user.name, response.user.role, response.user.phone);
       }, 1500);
     }
 
