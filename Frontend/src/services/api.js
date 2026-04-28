@@ -1,9 +1,14 @@
 import axios from 'axios';
 import { getStorage } from '../utils/storage';
 
+let rawBaseURL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+if (rawBaseURL && !rawBaseURL.endsWith('/api') && !rawBaseURL.includes('localhost')) {
+  rawBaseURL = rawBaseURL.endsWith('/') ? `${rawBaseURL}api` : `${rawBaseURL}/api`;
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
-  timeout: 10000,
+  baseURL: rawBaseURL,
+  timeout: 60000, // Increased to 60s to account for Render free tier cold starts
 });
 
 // Debug helper: Log the API URL being used in production if it's still localhost

@@ -26,13 +26,34 @@ const httpServer = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 const CLIENT_ORIGIN = process.env.CLIENT_URL || 'http://localhost:5173';
 
+// ── Dynamic CORS origin list ─────────────────────────────────
+const allowedOrigins = [
+  CLIENT_ORIGIN,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+].filter(Boolean);
+
+// Accept any *.vercel.app or *.onrender.com domain automatically
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.onrender.com')
+    ) {
+      return callback(null, true);
+    }
+    console.warn(`[CORS] Blocked request from origin: ${origin}`);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+};
+
 // ── Socket.io setup ──────────────────────────────────────────
-const io = new Server(httpServer, {
-  cors: { 
-    origin: [CLIENT_ORIGIN, 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'], 
-    credentials: true 
-  }
-});
+const io = new Server(httpServer, { cors: corsOptions });
 
 // Attach io to app so controllers can access it
 app.set('io', io);
@@ -55,10 +76,7 @@ io.on('connection', (socket) => {
 // ─────────────────────────────────────────────────────────────
 
 app.use(helmet());
-app.use(cors({ 
-  origin: [CLIENT_ORIGIN, 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'], 
-  credentials: true 
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
@@ -71,7 +89,16 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/inspections', inspectionRoutes);
 app.use('/api/workflow', workflowRoutes);
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+app.get('/api/health', (req, res) => {
+  const mongoose = require('mongoose');
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    dbState: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    dbHost: mongoose.connection.host || 'unknown',
+    env: process.env.NODE_ENV || 'development'
+  });
+});
 
 app.use(errorHandler);
 
