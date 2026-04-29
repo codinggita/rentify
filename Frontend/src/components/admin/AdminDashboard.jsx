@@ -190,8 +190,13 @@ const AdminDashboard = ({ data, onRefresh }) => {
       socket.on('admin_notification', (data) => {
         if (data.type === 'MAINTENANCE_ALERT') {
            // Maintenance tickets are handled by 'new_ticket' for list update
-           // But we could refresh workflows if needed
         }
+      });
+
+      socket.on('request_update', (data) => {
+        setMaintenanceTickets(prev => prev.map(t => 
+          t._id === data.ticketId ? { ...t, status: data.status } : t
+        ));
       });
     }
 

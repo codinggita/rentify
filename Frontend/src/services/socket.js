@@ -16,8 +16,8 @@ export const getSocket = () => {
   return socket;
 };
 
-export const joinUserRoom = (userId) => {
-  if (userId) getSocket().emit('join', String(userId));
+export const joinUserRoom = (userId, role) => {
+  if (userId) getSocket().emit('join', { userId, role });
 };
 
 export const disconnectSocket = () => {

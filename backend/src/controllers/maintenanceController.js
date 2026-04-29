@@ -81,18 +81,18 @@ const maintenanceController = {
             createdAt: savedTicket.createdAt,
           };
 
-          // Notify Admins
-          io.emit('admin_notification', { ...payload, type: 'MAINTENANCE_ALERT' });
-          io.emit('new_ticket', payload);
-          io.emit('new_workflow_request', payload); // So admin workflow section also refreshes if it shows these
+          // Notify Admins specifically (via admin room)
+          io.to('admin').emit('admin_notification', { ...payload, type: 'MAINTENANCE_ALERT' });
+          io.emit('new_ticket', populatedTicket);
+          io.emit('new_workflow_request', populatedTicket); // So admin workflow section also refreshes if it shows these
 
           // Notify specific assigned provider (if set)
           if (savedTicket.assignedTo) {
-            io.to(String(savedTicket.assignedTo)).emit('new_ticket', payload);
+            io.to(String(savedTicket.assignedTo)).emit('new_ticket', populatedTicket);
           }
 
           // Broadcast to all connected service providers
-          io.emit('new_ticket_broadcast', payload);
+          io.emit('new_ticket_broadcast', populatedTicket);
         }
       } catch (socketErr) {
         console.error('[Socket] Emit error:', socketErr.message);
@@ -163,6 +163,9 @@ const maintenanceController = {
               ticketId: updatedTicket._id
             });
           }
+
+          // Notify Admins
+          io.to('admin').emit('request_update', notificationData);
         }
       } catch (err) {
         console.error('[Socket] Update notification error:', err);

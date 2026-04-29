@@ -34,11 +34,11 @@ Use these pre-seeded accounts to explore the various role-based dashboards:
 
 | Role | Username (Login) | Password |
 | :--- | :--- | :--- |
-| 🛡️ **Admin** | `arjun.admin` | `adminpassword` |
-| 🏠 **Owner** | `priya.mehta` | `password123` |
-| 🏘️ **Tenant** | `amit.kumar` | `password123` |
-| 🔍 **Inspector** | `deepak.rao` | `password123` |
-| 🔧 **Service** | `suresh.mistry` | `password123` |
+| 🛡️ **Admin** | `arjun.admin` | `arjun.admin` |
+| 🏠 **Owner** | `priya.mehta` | `priya.mehta` |
+| 🏘️ **Tenant** | `amit.kumar` | `amit.kumar` |
+| 🔍 **Inspector** | `deepak.rao` | `deepak.rao` |
+| 🔧 **Service** | `suresh.mistry` | `suresh.mistry` |
 
 ---
 
