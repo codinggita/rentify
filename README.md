@@ -29,6 +29,17 @@ To prevent API abuse and manage costs, we implemented a custom backend monitor:
 *   **Automatic Cutoff**: Once the platform reaches **330 SMS messages in a 24-hour period**, the backend automatically disables Phone OTP and redirects users to Email OTP to ensure zero service interruption.
 *   **Email Throttling**: Limits users to 5 OTP requests per hour per email address to prevent spam.
 
+### 3. Test Credentials
+Use these pre-seeded accounts to explore the various role-based dashboards:
+
+| Role | Username (Login) | Password |
+| :--- | :--- | :--- |
+| 🛡️ **Admin** | `arjun.admin` | `adminpassword` |
+| 🏠 **Owner** | `priya.mehta` | `password123` |
+| 🏘️ **Tenant** | `amit.kumar` | `password123` |
+| 🔍 **Inspector** | `deepak.rao` | `password123` |
+| 🔧 **Service** | `suresh.mistry` | `password123` |
+
 ---
 
 ## 🎭 Role-Specific Ecosystems
@@ -110,6 +121,14 @@ FIREBASE_PROJECT_ID=...
 ```env
 VITE_API_URL=http://localhost:5001/api
 VITE_FIREBASE_CONFIG=...
+```
+
+---
+
+### 🧪 Database Seeding
+To populate the database with the test accounts and sample properties, run the following command in the `backend` directory:
+```bash
+npm run seed
 ```
 
 ---
