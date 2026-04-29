@@ -29,22 +29,23 @@ async function seed() {
     const adminHash = await bcrypt.hash('adminpassword', 10);
 
     // ── CREATE USERS ──────────────────────────────────────
+    // ── CREATE USERS ──────────────────────────────────────
     const [admin, priya, rajesh, sunita,
            amit, sneha, rohan, kavita, vikram,
            deepak, meena, suresh, ravi] = await User.insertMany([
-      { name: "Arjun Sharma",    email: "admin@rentify.com",         passwordHash: adminHash, role: "ADMIN"  },
-      { name: "Priya Mehta",     email: "owner@example.com",           passwordHash: hash,      role: "OWNER"  },
-      { name: "Rajesh Patel",    email: "rajesh.patel@example.com",    passwordHash: hash,      role: "OWNER"  },
-      { name: "Sunita Verma",    email: "sunita.verma@example.com",    passwordHash: hash,      role: "OWNER"  },
-      { name: "Amit Kumar",      email: "tenant@example.com",          passwordHash: hash,      role: "RENTER"   },
-      { name: "Sneha Joshi",     email: "sneha.joshi@example.com",     passwordHash: hash,      role: "RENTER"  },
-      { name: "Rohan Desai",     email: "rohan.desai@example.com",     passwordHash: hash,      role: "RENTER"  },
-      { name: "Kavita Nair",     email: "kavita.nair@example.com",     passwordHash: hash,      role: "RENTER" },
-      { name: "Vikram Singh",    email: "vikram.singh@example.com",    passwordHash: hash,      role: "RENTER" },
-      { name: "Deepak Rao",      email: "deepak.inspector@example.com",passwordHash: hash,      role: "INSPECTOR" },
-      { name: "Meena Iyer",      email: "meena.inspector@example.com", passwordHash: hash,      role: "INSPECTOR"  },
-      { name: "Suresh Plumber",  email: "suresh.service@example.com",  passwordHash: hash,      role: "SERVICE" },
-      { name: "Ravi Electrician",email: "ravi.service@example.com",    passwordHash: hash,      role: "SERVICE"   },
+      { firstName: "Arjun", lastName: "Sharma", username: "arjun.admin", email: "admin@rentify.com", passwordHash: adminHash, role: "ADMIN" },
+      { firstName: "Priya", lastName: "Mehta", username: "priya.mehta", email: "owner@example.com", passwordHash: hash, role: "OWNER" },
+      { firstName: "Rajesh", lastName: "Patel", username: "rajesh.patel", email: "rajesh.patel@example.com", passwordHash: hash, role: "OWNER" },
+      { firstName: "Sunita", lastName: "Verma", username: "sunita.verma", email: "sunita.verma@example.com", passwordHash: hash, role: "OWNER" },
+      { firstName: "Amit", lastName: "Kumar", username: "amit.kumar", email: "tenant@example.com", passwordHash: hash, role: "RENTER" },
+      { firstName: "Sneha", lastName: "Joshi", username: "sneha.joshi", email: "sneha.joshi@example.com", passwordHash: hash, role: "RENTER" },
+      { firstName: "Rohan", lastName: "Desai", username: "rohan.desai", email: "rohan.desai@example.com", passwordHash: hash, role: "RENTER" },
+      { firstName: "Kavita", lastName: "Nair", username: "kavita.nair", email: "kavita.nair@example.com", passwordHash: hash, role: "RENTER" },
+      { firstName: "Vikram", lastName: "Singh", username: "vikram.singh", email: "vikram.singh@example.com", passwordHash: hash, role: "RENTER" },
+      { firstName: "Deepak", lastName: "Rao", username: "deepak.rao", email: "deepak.inspector@example.com", passwordHash: hash, role: "INSPECTOR" },
+      { firstName: "Meena", lastName: "Iyer", username: "meena.iyer", email: "meena.inspector@example.com", passwordHash: hash, role: "INSPECTOR" },
+      { firstName: "Suresh", lastName: "Plumber", username: "suresh.mistry", email: "suresh.service@example.com", passwordHash: hash, role: "SERVICE" },
+      { firstName: "Ravi", lastName: "Electrician", username: "ravi.electrician", email: "ravi.service@example.com", passwordHash: hash, role: "SERVICE" },
     ]);
     console.log('👥 Users created');
 
@@ -176,13 +177,13 @@ async function seed() {
 
     console.log('\n🎉 Database seeded successfully!');
     console.log('══════════════════════════════════════════════════');
-    console.log('🔑 TEST ACCOUNTS (one per role):');
+    console.log('🔑 TEST ACCOUNTS (Login via Username):');
     console.log('──────────────────────────────────────────────────');
-    console.log('   ADMIN           → admin@rentify.com            / adminpassword');
-    console.log('   OWNER           → owner@example.com            / password123');
-    console.log('   RENTER          → tenant@example.com           / password123');
-    console.log('   INSPECTOR       → deepak.inspector@example.com / password123');
-    console.log('   SERVICE PROVIDER→ suresh.service@example.com   / password123');
+    console.log('   ADMIN           → arjun.admin       / adminpassword');
+    console.log('   OWNER           → priya.mehta       / password123');
+    console.log('   RENTER          → amit.kumar        / password123');
+    console.log('   INSPECTOR       → deepak.rao        / password123');
+    console.log('   SERVICE PROVIDER→ suresh.mistry     / password123');
     console.log('══════════════════════════════════════════════════');
 
     await mongoose.disconnect();
