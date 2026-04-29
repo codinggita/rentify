@@ -44,7 +44,8 @@ const Signup = () => {
   };
 
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     password: '',
@@ -57,8 +58,8 @@ const Signup = () => {
 
   const validateStep1 = () => {
     const newErrors = {};
-    if (!formData.name || formData.name.trim().split(' ').length < 2) {
-      newErrors.name = 'Please enter your full name (at least 2 words)';
+    if (!formData.firstName) {
+      newErrors.firstName = 'First name is required';
     }
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Valid email is required';
@@ -109,10 +110,12 @@ const Signup = () => {
     setLoading(true);
     try {
       const response = await authService.register({
-        name: formData.name,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        role: formData.role
+        role: formData.role,
+        phone: formData.phone
       });
       
       const backendRole = response.user.role;
@@ -185,15 +188,39 @@ const Signup = () => {
               <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Full Name</label>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">First Name</label>
                     <input
                       type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className={`w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${errors.name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500'} dark:text-white`}
-                      placeholder="e.g. Amit Kumar"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                      className={`w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${errors.firstName ? 'border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500'} dark:text-white`}
+                      placeholder="e.g. Amit"
                     />
-                    {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+                    {errors.firstName && <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Last Name (Optional)</label>
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                      className={`w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm focus:ring-2 outline-none transition-all border-slate-200 dark:border-slate-700 focus:border-indigo-500 dark:text-white`}
+                      placeholder="e.g. Kumar"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email Address</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className={`w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${errors.email ? 'border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500'} dark:text-white`}
+                      placeholder="name@example.com"
+                    />
+                    {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Phone Number</label>
@@ -206,18 +233,6 @@ const Signup = () => {
                     />
                     {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email Address</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className={`w-full px-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${errors.email ? 'border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500'} dark:text-white`}
-                    placeholder="name@example.com"
-                  />
-                  {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

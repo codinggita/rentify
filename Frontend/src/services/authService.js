@@ -8,9 +8,9 @@ const authService = {
   /**
    * Login user with email and password
    */
-  login: async (email, password, role) => {
+  login: async (username, password, role) => {
     try {
-      const response = await api.post('/auth/login', { email, password, role });
+      const response = await api.post('/auth/login', { username, password, role });
       return response.data;
     } catch (error) {
       if (error.response && error.response.data && error.response.data.error) {
@@ -71,8 +71,16 @@ const authService = {
   /**
    * Verify Email OTP and login/register
    */
-  verifyEmailOTP: async ({ email, otp, name, role }) => {
-    const response = await api.post('/auth/email-otp/verify', { email, otp, name, role });
+  verifyEmailOTP: async ({ email, otp, role }) => {
+    const response = await api.post('/auth/email-otp/verify', { email, otp, role });
+    return response.data;
+  },
+
+  /**
+   * Check if phone user exists
+   */
+  checkPhoneUser: async (phone) => {
+    const response = await api.post('/auth/phone-otp/check-user', { phone });
     return response.data;
   },
 
@@ -95,8 +103,8 @@ const authService = {
   /**
    * Login/Register with phone after Firebase verification
    */
-  phoneLogin: async ({ phone, role, name }) => {
-    const response = await api.post('/auth/phone-login', { phone, role, name });
+  phoneLogin: async ({ phone, role }) => {
+    const response = await api.post('/auth/phone-login', { phone, role });
     return response.data;
   },
 

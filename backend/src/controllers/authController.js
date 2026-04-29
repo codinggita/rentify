@@ -5,33 +5,42 @@ const { sendWhatsAppWelcome } = require('../services/whatsappService');
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, phone } = req.body;
+    const { firstName, lastName, email, password, role, phone } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
     
-    // Block admin self-registration — admins can only be seeded
+    // Block admin self-registration
     if (role && role.toUpperCase() === 'ADMIN') {
-      return res.status(403).json({ error: 'Admin accounts cannot be created via signup. Contact the platform administrator.' });
+      return res.status(403).json({ error: 'Admin accounts cannot be created via signup.' });
     }
 
-    // Check if user exists
-    const userExists = await User.findOne({ email: normalizedEmail });
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+    // Check if email exists
+    const emailExists = await User.findOne({ email: normalizedEmail });
+    if (emailExists) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    // Generate Unique Username
+    let username = `${firstName.toLowerCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+    let usernameExists = await User.findOne({ username });
+    while (usernameExists) {
+      username = `${firstName.toLowerCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+      usernameExists = await User.findOne({ username });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
     
     const user = await User.create({
-      name,
+      firstName,
+      lastName,
+      username,
       email: normalizedEmail,
       passwordHash,
       role,
       phone
     });
     
-    // Trigger WhatsApp Welcome (non-blocking)
     if (phone) {
-      sendWhatsAppWelcome(phone, user.name, user.role).catch(err => 
+      sendWhatsAppWelcome(phone, `${user.firstName} ${user.lastName || ''}`.trim(), user.role).catch(err => 
         console.error('[WhatsApp Bot] Welcome error:', err.message)
       );
     }
@@ -40,7 +49,9 @@ exports.register = async (req, res) => {
     res.status(201).json({
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
         email: user.email,
         role: user.role
       },
@@ -53,18 +64,17 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
-    const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail });
+    const { username, password, role } = req.body;
+    const normalizedUsername = username.toLowerCase().trim();
+    const user = await User.findOne({ username: normalizedUsername });
     
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Role Verification: Ensure user is logging in with their correct persona
     if (role && user.role.toUpperCase() !== role.toUpperCase()) {
       return res.status(403).json({ 
-        error: `Account found, but you are registered as a ${user.role}. Please log in through the correct portal.` 
+        error: `Account found, but you are registered as a ${user.role}.` 
       });
     }
     
@@ -72,7 +82,9 @@ exports.login = async (req, res) => {
     res.json({
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
         email: user.email,
         role: user.role
       },

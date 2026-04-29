@@ -2,7 +2,7 @@ const express = require('express');
 const { login, register, getMe } = require('../controllers/authController');
 const { googleLogin } = require('../controllers/googleAuthController');
 const { sendEmailOTP, verifyEmailOTP } = require('../controllers/emailOTPController');
-const { phoneLogin } = require('../controllers/phoneAuthController');
+const { phoneLogin, checkPhoneUser } = require('../controllers/phoneAuthController');
 const { checkPhoneLimit, incrementPhoneLimit } = require('../controllers/phoneLimitController');
 const { authenticate } = require('../middleware/auth');
 
@@ -15,6 +15,7 @@ router.post('/email-otp/send', sendEmailOTP);
 router.post('/email-otp/verify', verifyEmailOTP);
 
 // Phone Auth Routes
+router.post('/phone-otp/check-user', checkPhoneUser);
 router.get('/phone-otp/check-limit', checkPhoneLimit);
 router.post('/phone-otp/increment-limit', incrementPhoneLimit);
 router.post('/phone-login', phoneLogin);
