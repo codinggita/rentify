@@ -96,6 +96,8 @@ const AdminDashboard = ({ data, onRefresh }) => {
   const [inspectors, setInspectors] = useState([]);
   const [inspectionTasks, setInspectionTasks] = useState([]);
   const [workflowRequests, setWorkflowRequests] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [tempProviderId, setTempProviderId] = useState('');
 
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('rentify_global_config');
@@ -584,37 +586,36 @@ const AdminDashboard = ({ data, onRefresh }) => {
             </div>
             <div className="space-y-6">
               {maintenanceTickets.slice(0, 3).map((ticket) => (
-                <div key={ticket._id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary/50 transition-all group">
+                <div 
+                  key={ticket._id} 
+                  onClick={() => {
+                    setSelectedTicket(ticket);
+                    setTempProviderId(ticket.assignedTo?._id || '');
+                  }}
+                  className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-primary hover:shadow-lg hover:shadow-primary/5 cursor-pointer transition-all group"
+                >
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">{ticket.type}</div>
+                      <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">{ticket.type || 'MAINTENANCE'}</div>
                       <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[150px]">{ticket.property?.title}</h4>
+                      <p className="text-[9px] text-slate-400 font-bold mt-0.5">By: {ticket.renter?.name || ticket.renter?.firstName || 'User'}</p>
                     </div>
                     {ticket.assignedTo ? (
                       <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-black text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-md uppercase">Assigned</span>
+                        <span className="text-[10px] font-black text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-md uppercase tracking-tight">Assigned</span>
                         <span className="text-[9px] font-bold text-slate-400 mt-1">{ticket.assignedTo.name}</span>
                       </div>
                     ) : (
-                      <span className="text-[10px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md uppercase">Pending</span>
+                      <span className="text-[10px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md uppercase tracking-tight">Pending</span>
                     )}
                   </div>
-                  <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
+                  <div className="flex items-center justify-between gap-4 mt-3 pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
                     <div className="flex -space-x-2">
                        {serviceProviders.slice(0, 3).map(p => (
-                         <img key={p._id} src={`https://i.pravatar.cc/100?u=${p._id}`} className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 object-cover" title={p.name} />
+                         <img key={p._id} src={`https://i.pravatar.cc/100?u=${p._id}`} className="w-5 h-5 rounded-lg border-2 border-white dark:border-slate-900 object-cover" title={p.name} />
                        ))}
                     </div>
-                    <select 
-                      className="bg-white dark:bg-slate-900 text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-                      value={ticket.assignedTo?._id || ''}
-                      onChange={(e) => handleAssignProvider(ticket._id, e.target.value)}
-                    >
-                      <option value="">{ticket.assignedTo ? 'Change Tech' : 'Assign Tech'}</option>
-                      {serviceProviders.map(p => (
-                        <option key={p._id} value={p._id}>{p.name}</option>
-                      ))}
-                    </select>
+                    <span className="text-[9px] font-black text-slate-400 uppercase group-hover:text-primary transition-colors">Click to Dispatch →</span>
                   </div>
                 </div>
               ))}
@@ -1092,6 +1093,71 @@ const AdminDashboard = ({ data, onRefresh }) => {
                   <div className="font-bold">Select a conversation to start chatting</div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Maintenance Ticket Modal */}
+      {selectedTicket && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4" onClick={() => setSelectedTicket(null)}>
+          <div className="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+               <h3 className="font-black text-2xl dark:text-white">Dispatch Protocol</h3>
+               <button onClick={() => setSelectedTicket(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full dark:text-white"><X size={20}/></button>
+            </div>
+            <div className="p-10 space-y-8">
+              <div className="flex items-center gap-6">
+                <img src={`https://i.pravatar.cc/100?u=${selectedTicket.renter?._id}`} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-lg" alt="" />
+                <div>
+                  <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Requester</div>
+                  <h4 className="text-xl font-black text-slate-900 dark:text-white">{selectedTicket.renter?.name || selectedTicket.renter?.firstName || 'User'}</h4>
+                  <p className="text-xs text-slate-500 font-bold">{selectedTicket.renter?.email}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Property</div>
+                   <div className="font-bold text-slate-700 dark:text-slate-300 text-sm truncate">{selectedTicket.property?.title}</div>
+                </div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Priority</div>
+                   <div className={`font-black text-sm ${selectedTicket.priority === 'HIGH' ? 'text-rose-500' : 'text-amber-500'}`}>{selectedTicket.priority}</div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Issue Details</div>
+                 <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                    "{selectedTicket.description}"
+                 </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Technician</div>
+                 <select 
+                    className="w-full bg-slate-50 dark:bg-slate-800 border-0 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-primary/20 dark:text-white font-bold text-sm cursor-pointer"
+                    value={tempProviderId}
+                    onChange={(e) => setTempProviderId(e.target.value)}
+                  >
+                    <option value="">Choose a Provider...</option>
+                    {serviceProviders.map(p => (
+                      <option key={p._id} value={p._id}>{p.name} ({p.role})</option>
+                    ))}
+                 </select>
+              </div>
+
+              <Button 
+                onClick={() => {
+                  handleAssignProvider(selectedTicket._id, tempProviderId);
+                  setSelectedTicket(null);
+                }}
+                disabled={!tempProviderId}
+                className="w-full h-14 premium-gradient text-white border-0 font-black rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+              >
+                Assign & Dispatch Technician
+              </Button>
             </div>
           </div>
         </div>
