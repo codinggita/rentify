@@ -5,6 +5,7 @@ import Button from '../common/Button';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { openAuthModal, openSettingsModal, toggleTheme } from '../../store/slices/uiSlice';
+import { getSocket } from '../../services/socket';
 import { 
   Sun, Moon, LogOut, User as UserIcon, Settings as SettingsIcon, 
   ChevronDown, Menu, X as CloseIcon, Bell, MessageSquare, Clock as ClockIcon, Search, CheckCircle
@@ -89,11 +90,44 @@ const Navbar = () => {
 
     window.addEventListener('rentify:new_ticket', handleNewTicket);
     window.addEventListener('rentify:owner_notification', handleTicketUpdate);
+
+    // Socket listeners for real-time ecosystem updates
+    const socket = getSocket();
+    if (socket && isAuthenticated) {
+      socket.on('admin_notification', (data) => {
+        if (role === 'admin') {
+          const newNotif = {
+            id: Date.now() + Math.random(),
+            text: `🔔 ${data.userName || 'New Request'}: ${data.title}`,
+            subtext: `${data.property} · ${data.priority} Priority`,
+            type: 'ticket',
+            time: 'Just now',
+          };
+          setNotifications(prev => [newNotif, ...prev.slice(0, 9)]);
+        }
+      });
+
+      socket.on('request_update', (data) => {
+        const newNotif = {
+          id: Date.now() + Math.random(),
+          text: `🔔 Update: ${data.message}`,
+          subtext: data.property,
+          type: 'update',
+          time: 'Just now',
+        };
+        setNotifications(prev => [newNotif, ...prev.slice(0, 9)]);
+      });
+    }
+
     return () => {
       window.removeEventListener('rentify:new_ticket', handleNewTicket);
       window.removeEventListener('rentify:owner_notification', handleTicketUpdate);
+      if (socket) {
+        socket.off('admin_notification');
+        socket.off('request_update');
+      }
     };
-  }, []);
+  }, [isAuthenticated, role]);
 
   const handleLogout = () => {
     dispatch(logout());

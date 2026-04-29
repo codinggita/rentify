@@ -65,11 +65,15 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log(`[Socket] Client connected: ${socket.id}`);
 
-  // Each user joins a personal room identified by their userId
-  socket.on('join', (userId) => {
+  // Users join rooms by ID and also by role if provided
+  socket.on('join', ({ userId, role }) => {
     if (userId) {
-      socket.join(userId);
-      console.log(`[Socket] User ${userId} joined room`);
+      socket.join(String(userId));
+      console.log(`[Socket] User ${userId} joined personal room`);
+    }
+    if (role === 'admin' || role === 'ADMIN') {
+      socket.join('admin');
+      console.log(`[Socket] User joined admin room`);
     }
   });
 

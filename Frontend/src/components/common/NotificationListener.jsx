@@ -11,7 +11,7 @@ const NotificationListener = () => {
     if (!isAuthenticated || !user) return;
 
     const socket = getSocket();
-    joinUserRoom(user.id);
+    joinUserRoom(user.id, user.role);
 
     // --- Admin Listeners ---
     if (user.role === 'ADMIN') {
@@ -95,6 +95,11 @@ const NotificationListener = () => {
           fontSize: '0.8rem'
         }
       });
+
+      // Dispatch global event for UI components to update state
+      window.dispatchEvent(new CustomEvent('rentify:ticket_update', {
+        detail: { ticketId: data.ticketId, status: data.status }
+      }));
     });
 
     return () => {
