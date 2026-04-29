@@ -17,6 +17,7 @@ import userService from '../../services/userService';
 import chatService from '../../services/chatService';
 import inspectionService from '../../services/inspectionService';
 import workflowService from '../../services/workflowService';
+import { getSocket } from '../../services/socket';
 
 // --- MOCK DATA ---
 const initialEntities = [
@@ -175,6 +176,31 @@ const AdminDashboard = ({ data, onRefresh }) => {
       } catch (err) { console.error('Failed to fetch workflows', err); }
     };
     fetchDispatchData();
+
+    // Socket Listener for Real-time Updates
+    const socket = getSocket();
+    if (socket) {
+      socket.on('new_ticket', (ticket) => {
+        setMaintenanceTickets(prev => [ticket, ...prev]);
+        toast.success('New Maintenance Request Received! 🔧', {
+          style: { borderRadius: '1rem', background: '#0f172a', color: '#fff', fontWeight: '900' }
+        });
+      });
+
+      socket.on('admin_notification', (data) => {
+        if (data.type === 'MAINTENANCE_ALERT') {
+           // Maintenance tickets are handled by 'new_ticket' for list update
+           // But we could refresh workflows if needed
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('new_ticket');
+        socket.off('admin_notification');
+      }
+    };
   }, [data, isChatOpen]);
 
   // --- Handlers ---

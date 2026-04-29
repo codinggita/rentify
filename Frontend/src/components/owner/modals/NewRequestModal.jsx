@@ -39,6 +39,9 @@ export default function NewRequestModal({ isOpen, onClose, onSubmit, allowedProp
 
     setLoading(true);
     try {
+      // Find the actual property object to get its ID
+      const selectedPropObj = propertyList.find(p => p.title === form.property);
+
       // Build payload matching the backend schema
       const payload = {
         title:       form.title.trim(),
@@ -47,7 +50,8 @@ export default function NewRequestModal({ isOpen, onClose, onSubmit, allowedProp
         type:        form.type,
         priority:    form.priority.toUpperCase(),
         status:      'OPEN',
-        propertyName: form.property,  // stored for display; property ObjectId optional
+        property:    selectedPropObj?._id || selectedPropObj?.id, // Correct ObjectId field
+        propertyName: form.property,  // stored for display
       };
 
       // Try real API — fall back gracefully if auth not set up
