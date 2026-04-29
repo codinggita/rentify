@@ -15,6 +15,12 @@ exports.sendEmailOTP = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Check if user exists before sending OTP
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found. Please register first.' });
+    }
+
     // Rate limit: max 5 OTPs per email per hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const recentOTPs = await EmailOTP.countDocuments({
@@ -50,12 +56,12 @@ exports.sendEmailOTP = async (req, res) => {
 };
 
 /**
- * Verify OTP and login/register
+ * Verify OTP and login
  * POST /api/auth/email-otp/verify
  */
 exports.verifyEmailOTP = async (req, res) => {
   try {
-    const { email, otp, name, role } = req.body;
+    const { email, otp, role } = req.body;
     if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -75,13 +81,6 @@ exports.verifyEmailOTP = async (req, res) => {
         { $inc: { attempts: 1 } }
       );
 
-      // Check if too many failed attempts
-      const latest = await EmailOTP.findOne({ email: normalizedEmail });
-      if (latest && latest.attempts >= 5) {
-        await EmailOTP.deleteMany({ email: normalizedEmail });
-        return res.status(429).json({ error: 'Too many failed attempts. Please request a new OTP.' });
-      }
-
       return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
 
@@ -89,43 +88,25 @@ exports.verifyEmailOTP = async (req, res) => {
     otpRecord.verified = true;
     await otpRecord.save();
 
-    // Find or create user
+    // Find user (they must exist because of sendEmailOTP check)
     let user = await User.findOne({ email: normalizedEmail });
-    let isNewUser = false;
 
     if (!user) {
-      // Block admin signup
-      const VALID_ROLES = ['OWNER', 'RENTER', 'SERVICE', 'INSPECTOR'];
-      const selectedRole = (role && VALID_ROLES.includes(role.toUpperCase()))
-        ? role.toUpperCase()
-        : 'RENTER';
-
-      user = await User.create({
-        name: name || normalizedEmail.split('@')[0],
-        email: normalizedEmail,
-        passwordHash: `EMAIL_OTP_${Date.now()}`,
-        role: selectedRole,
-        authProvider: 'email-otp'
-      });
-      isNewUser = true;
-      console.log(`[Email OTP] New user: ${normalizedEmail} as ${selectedRole}`);
-
-      // Send welcome email (non-blocking)
-      sendWelcomeEmail(normalizedEmail, user.name, selectedRole).catch(err => 
-        console.error('[Welcome Email] Error:', err.message)
-      );
+      return res.status(404).json({ error: 'User record lost. Please register.' });
     }
 
     const token = generateToken(user._id);
     res.json({
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
         email: user.email,
         role: user.role
       },
       token,
-      isNewUser
+      isNewUser: false
     });
   } catch (error) {
     console.error('[Email OTP] Verify error:', error.message);

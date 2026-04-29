@@ -41,10 +41,25 @@ exports.googleLogin = async (req, res) => {
         ? role.toUpperCase() 
         : 'RENTER';
 
+      // Split name into firstName and lastName
+      const nameParts = userName.split(' ');
+      const firstName = nameParts[0] || 'User';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Generate Unique Username
+      let username = `${firstName.toLowerCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+      let usernameExists = await User.findOne({ username });
+      while (usernameExists) {
+        username = `${firstName.toLowerCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+        usernameExists = await User.findOne({ username });
+      }
+
       user = await User.create({
-        name: userName,
+        firstName,
+        lastName,
+        username,
         email: normalizedEmail,
-        passwordHash: `GOOGLE_${googleId || 'oauth'}`,
+        passwordHash: `GOOGLE_${googleId || Date.now()}`,
         role: selectedRole,
         authProvider: 'google'
       });
@@ -55,9 +70,12 @@ exports.googleLogin = async (req, res) => {
     res.json({
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        name: user.name // from virtual
       },
       token
     });

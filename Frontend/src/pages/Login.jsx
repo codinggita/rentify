@@ -33,7 +33,7 @@ const Login = () => {
   const [confirmationResult, setConfirmationResult] = useState(null);
   
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
 
@@ -41,8 +41,7 @@ const Login = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
+    if (!formData.username) newErrors.username = 'Username is required';
     
     if (!formData.password) newErrors.password = 'Password is required';
     
@@ -95,7 +94,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await authService.login(formData.email, formData.password);
+      const response = await authService.login(formData.username, formData.password, selectedRole);
       handleLoginSuccess(response);
     } catch (error) {
       console.error('Login error:', error);
@@ -167,16 +166,19 @@ const Login = () => {
 
     setLoading(true);
     try {
-      // 1. Check Backend Limit (330/day)
+      // 1. Check if user exists
+      await authService.checkPhoneUser(phone);
+      
+      // 2. Check Backend Limit (330/day)
       await authService.checkPhoneLimit();
       
-      // 2. Firebase Phone Auth
+      // 3. Firebase Phone Auth
       setupRecaptcha();
       const appVerifier = window.recaptchaVerifier;
       const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
       setConfirmationResult(confirmation);
       
-      // 3. Increment Backend Limit
+      // 4. Increment Backend Limit
       await authService.incrementPhoneLimit();
       
       toast.success('OTP sent to your phone! 📱');
@@ -482,27 +484,27 @@ const Login = () => {
           ) : (
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">Username</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail size={18} className="text-slate-400" />
+                    <User size={18} className="text-slate-400" />
                   </div>
                   <input
-                    type="email"
-                    value={formData.email}
+                    type="text"
+                    value={formData.username}
                     onChange={(e) => {
-                      setFormData({...formData, email: e.target.value});
-                      if(errors.email) setErrors({...errors, email: ''});
+                      setFormData({...formData, username: e.target.value});
+                      if(errors.username) setErrors({...errors, username: ''});
                     }}
                     className={`w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm focus:ring-2 outline-none transition-all ${
-                      errors.email 
+                      errors.username 
                         ? 'border-red-500 focus:ring-red-500/20 dark:border-red-500/50' 
                         : 'border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500/20'
                     } dark:text-white`}
-                    placeholder="name@example.com"
+                    placeholder="Enter your username"
                   />
                 </div>
-                {errors.email && <p className="mt-1.5 text-xs font-medium text-red-500">{errors.email}</p>}
+                {errors.username && <p className="mt-1.5 text-xs font-medium text-red-500">{errors.username}</p>}
               </div>
 
               <div>
