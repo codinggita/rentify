@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { setStorage, getStorage, removeStorage } from '../../utils/storage';
+import { disconnectSocket } from '../../services/socket';
 
 const initialState = {
   user: getStorage('user') || null,
@@ -24,6 +25,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       removeStorage('user');
       removeStorage('auth_token');
+      disconnectSocket();
     },
   },
 });

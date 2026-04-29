@@ -2,6 +2,8 @@ const WorkflowRequest = require('../models/WorkflowRequest');
 const Property = require('../models/Property');
 const Lease = require('../models/Lease');
 const User = require('../models/User');
+const { getIO } = require('../config/socket');
+const { notifyUser, notifyAdmin } = require('../services/notification.service');
 
 exports.createRequest = async (req, res) => {
   try {
@@ -13,11 +15,20 @@ exports.createRequest = async (req, res) => {
       notes
     });
 
-    // Notify Admin via socket (if integrated)
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('new_workflow_request', request);
-    }
+    // Notify Admin via socket (room-based, not broadcast)
+    try {
+      const io = getIO() || req.app.get('io');
+      if (io) {
+        notifyAdmin(io, 'new_listing_request', {
+          listingId: request._id,
+          ownerId: req.user.id,
+          ownerName: req.user.name ?? req.user.email,
+          propertyTitle: '',
+          type: request.type,
+          submittedAt: request.createdAt,
+        });
+      }
+    } catch (_) {}
 
     res.status(201).json(request);
   } catch (err) {
@@ -69,33 +80,65 @@ exports.updateRequestStatus = async (req, res) => {
     }
     // ────────────────────────────────────────────────────────
 
-    // ── Notify Users via Socket ────────────────────────────
+    // ── Notify Users via Socket (room-based) ───────────────
     try {
-      const io = req.app.get('io');
+      const io = getIO() || req.app.get('io');
       if (io) {
-        const message = status === 'ASSIGNED' && savedRequest.type === 'LEASE_APPROVAL'
-          ? `An inspector has been assigned to your property: ${request.property?.title}.`
-          : status === 'COMPLETED' && savedRequest.type === 'LEASE_APPROVAL'
-          ? `Your property listing for ${request.property?.title} is now LIVE!`
-          : status === 'ASSIGNED' && savedRequest.type === 'TOUR_REQUEST'
-          ? `Your tour request for ${request.property?.title} has been confirmed.`
-          : `Update for ${request.property?.title}: ${status}`;
-
-        io.to(String(request.requester)).emit('request_update', {
-          status: savedRequest.status,
-          type: savedRequest.type,
-          property: request.property?.title,
-          message
-        });
-        if (assignedInspector) {
-          io.to(String(assignedInspector)).emit('new_task', {
-            type: 'INSPECTION',
-            property: request.property?.title,
-            requestId: savedRequest._id
+        // Inspector assigned to a LEASE_APPROVAL job
+        if (status === 'ASSIGNED' && assignedInspector && savedRequest.type === 'LEASE_APPROVAL') {
+          notifyUser(io, assignedInspector, 'inspector_assigned', {
+            listingId: savedRequest._id,
+            propertyTitle: request.property?.title ?? '',
+            address: request.property?.address ?? {},
+            assignedAt: new Date(),
+          });
+          notifyUser(io, request.requester, 'listing_status_update', {
+            listingId: savedRequest._id,
+            status: 'INSPECTOR_ASSIGNED',
+            updatedAt: new Date(),
           });
         }
+
+        // Inspector assigned to a TOUR_REQUEST (requester = renter)
+        if (status === 'ASSIGNED' && savedRequest.type === 'TOUR_REQUEST') {
+          notifyUser(io, request.requester, 'listing_status_update', {
+            listingId: savedRequest._id,
+            status: 'INSPECTOR_ASSIGNED',
+            propertyTitle: request.property?.title ?? '',
+            updatedAt: new Date(),
+          });
+        }
+
+        // Approved
+        if (status === 'COMPLETED') {
+          notifyUser(io, request.requester, 'listing_status_update', {
+            listingId: savedRequest._id,
+            status: 'APPROVED',
+            note: notes ?? '',
+            updatedAt: new Date(),
+          });
+        }
+
+        // Rejected
+        if (status === 'REJECTED') {
+          notifyUser(io, request.requester, 'listing_status_update', {
+            listingId: savedRequest._id,
+            status: 'REJECTED',
+            note: req.body.reason ?? notes ?? '',
+            updatedAt: new Date(),
+          });
+        }
+
+        // Notify admin of any status change
+        notifyAdmin(io, 'listing_status_update', {
+          listingId: savedRequest._id,
+          status: savedRequest.status,
+          updatedAt: new Date(),
+        });
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error('[Socket] workflowController notification error:', err.message);
+    }
     // ────────────────────────────────────────────────────────
 
     res.json(savedRequest);

@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
-const { Server } = require('socket.io');
+const { initSocket, getIO } = require('./config/socket');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const connectDB = require('./config/db');
@@ -57,30 +57,11 @@ const corsOptions = {
 };
 
 // ── Socket.io setup ──────────────────────────────────────────
-const io = new Server(httpServer, { cors: corsOptions });
+// All socket logic lives in config/socket.js
+const io = initSocket(httpServer, corsOptions);
 
-// Attach io to app so controllers can access it
+// Attach io to app so legacy controllers can access it via req.app.get('io')
 app.set('io', io);
-
-io.on('connection', (socket) => {
-  console.log(`[Socket] Client connected: ${socket.id}`);
-
-  // Users join rooms by ID and also by role if provided
-  socket.on('join', ({ userId, role }) => {
-    if (userId) {
-      socket.join(String(userId));
-      console.log(`[Socket] User ${userId} joined personal room`);
-    }
-    if (role === 'admin' || role === 'ADMIN') {
-      socket.join('admin');
-      console.log(`[Socket] User joined admin room`);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log(`[Socket] Client disconnected: ${socket.id}`);
-  });
-});
 // ─────────────────────────────────────────────────────────────
 
 app.use(helmet());

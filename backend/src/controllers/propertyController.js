@@ -1,5 +1,7 @@
 const Property = require('../models/Property');
 const WorkflowRequest = require('../models/WorkflowRequest');
+const { getIO } = require('../config/socket');
+const { notifyAdmin } = require('../services/notification.service');
 
 /**
  * Property Controller
@@ -62,19 +64,18 @@ const propertyController = {
         notes: 'Owner requested lease approval and inspection.'
       });
 
-      // ── Notify Admin via Socket ────────────────────────────
+      // ── Notify Admin via Socket (room-based) ─────────────────
       try {
-        const io = req.app.get('io');
+        const io = getIO() || req.app.get('io');
         if (io) {
-          io.emit('admin_notification', {
-            type: 'PROPERTY_LISTED',
-            title: 'New Property Listing',
-            property: savedProperty.title,
-            location: savedProperty.city,
-            message: `Owner listed a new property. Survey required.`,
-            workflowId: workflowReq._id
+          notifyAdmin(io, 'new_listing_request', {
+            listingId: workflowReq._id,
+            ownerId: req.user.id,
+            ownerName: req.user.name ?? req.user.email,
+            propertyTitle: savedProperty.title,
+            address: { city: savedProperty.city },
+            submittedAt: savedProperty.createdAt,
           });
-          io.emit('new_workflow_request', workflowReq);
         }
       } catch (err) {}
       // ────────────────────────────────────────────────────────

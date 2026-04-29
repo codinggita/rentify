@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   tickets: [],
+  items: [],   // alias used by service-request socket reducers
   filter: 'All', // 'All' | 'Pending' | 'In Progress' | 'Completed'
 };
 
@@ -25,8 +26,35 @@ const maintenanceSlice = createSlice({
     setFilter: (state, action) => {
       state.filter = action.payload;
     },
+    // ── Socket-driven reducers ───────────────────────────────────────────────
+    prependServiceRequest: (state, action) => {
+      state.items.unshift(action.payload);
+      state.tickets.unshift(action.payload); // keep tickets in sync
+    },
+    updateServiceRequestStatus: (state, action) => {
+      const { requestId, status, note, updatedAt } = action.payload;
+      const updateArr = (arr) => {
+        const item = arr.find(
+          (i) => i._id === requestId || i.requestId === requestId
+        );
+        if (item) {
+          item.status = status;
+          if (note) item.latestNote = note;
+          item.updatedAt = updatedAt;
+        }
+      };
+      updateArr(state.items);
+      updateArr(state.tickets);
+    },
+    prependJob: (state, action) => {
+      state.items.unshift(action.payload);
+      state.tickets.unshift(action.payload);
+    },
   },
 });
 
-export const { setTickets, addTicket, updateTicket, removeTicket, setFilter } = maintenanceSlice.actions;
+export const {
+  setTickets, addTicket, updateTicket, removeTicket, setFilter,
+  prependServiceRequest, updateServiceRequestStatus, prependJob,
+} = maintenanceSlice.actions;
 export default maintenanceSlice.reducer;
