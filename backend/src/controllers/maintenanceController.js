@@ -29,7 +29,7 @@ const maintenanceController = {
 
       const tickets = await MaintenanceTicket.find(query)
         .populate('property', 'title address')
-        .populate('tenant', 'name email')
+        .populate('renter', 'name email firstName lastName')
         .populate('assignedTo', 'name phone');
         
       res.status(200).json(tickets);
@@ -58,19 +58,26 @@ const maintenanceController = {
         priority: (req.body.priority || 'MEDIUM').toUpperCase()
       });
       const savedTicket = await newTicket.save();
+      const populatedTicket = await MaintenanceTicket.findById(savedTicket._id)
+        .populate('property', 'title')
+        .populate('renter', 'firstName lastName name');
 
       // ── Real-time notification via Socket.io ────────────────
       try {
         const io = req.app.get('io');
         if (io) {
+          const userName = populatedTicket.renter?.name || 
+                          (populatedTicket.renter?.firstName ? `${populatedTicket.renter.firstName} ${populatedTicket.renter.lastName}` : 'A User');
+          
           const payload = {
             ticketId: savedTicket._id,
             title: req.body.title || `${req.body.category}: ${req.body.type}`,
+            userName: userName,
             category: req.body.category || 'Maintenance',
             priority: savedTicket.priority,
-            property: req.body.propertyName || 'Property',
+            property: populatedTicket.property?.title || 'Property',
             location: req.body.address || 'Various',
-            message: `New maintenance task reported.`,
+            message: `${userName} requested maintenance for ${populatedTicket.property?.title || 'their property'}.`,
             createdAt: savedTicket.createdAt,
           };
 

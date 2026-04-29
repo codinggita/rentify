@@ -21,17 +21,18 @@ const NotificationListener = () => {
             <div className="flex-1 w-0 p-4">
               <div className="flex items-start">
                 <div className="flex-shrink-0 pt-0.5">
-                  <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
-                    <Building size={20} />
+                  <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20">
+                    {data.type === 'MAINTENANCE_ALERT' ? <Wrench size={20} /> : <Building size={20} />}
                   </div>
                 </div>
                 <div className="ml-3 flex-1">
-                  <p className="text-sm font-black text-white">{data.title}</p>
-                  <p className="mt-1 text-xs font-bold text-slate-400">{data.message}</p>
+                  <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">{data.type?.replace('_', ' ') || 'Notification'}</p>
+                  <p className="text-sm font-black text-white">{data.userName || data.title}</p>
+                  <p className="mt-0.5 text-xs font-medium text-slate-400 leading-tight">{data.message}</p>
                   {data.property && (
-                    <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-300 bg-white/5 p-1.5 rounded-lg border border-white/5">
+                    <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-slate-300 bg-white/5 p-2 rounded-xl border border-white/5">
                       <MapPin size={10} className="text-primary" />
-                      <span className="truncate">{data.property} | {data.location}</span>
+                      <span className="truncate">{data.property} • {data.location}</span>
                     </div>
                   )}
                 </div>
