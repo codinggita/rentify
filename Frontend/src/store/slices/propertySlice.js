@@ -45,7 +45,22 @@ const propertySlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
-    }
+    },
+    // ── Socket-driven reducers ─────────────────────────────────────────────────
+    prependListing: (state, action) => {
+      state.listings.unshift(action.payload);
+    },
+    updateListingStatus: (state, action) => {
+      const { listingId, status, note, updatedAt } = action.payload;
+      const item = state.listings.find(
+        (i) => i._id === listingId || i.listingId === listingId
+      );
+      if (item) {
+        item.status = status;
+        if (note) item.latestNote = note;
+        item.updatedAt = updatedAt;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -76,5 +91,5 @@ const propertySlice = createSlice({
   }
 });
 
-export const { setFilters, clearError } = propertySlice.actions;
+export const { setFilters, clearError, prependListing, updateListingStatus } = propertySlice.actions;
 export default propertySlice.reducer;
