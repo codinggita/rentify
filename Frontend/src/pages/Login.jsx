@@ -32,11 +32,12 @@ const Login = () => {
   const [otpCountdown, setOtpCountdown] = useState(0);
   const [confirmationResult, setConfirmationResult] = useState(null);
 
-  // Auto-detect role from URL or Referrer
+  // Auto-detect role from URL, LocalStorage, or Referrer
   useEffect(() => {
     const referrer = document.referrer || '';
     const params = new URLSearchParams(window.location.search);
     const paramRole = params.get('role');
+    const storedRole = localStorage.getItem('rentify_user_role');
     
     const roleMap = { 
       'owner': 'OWNER', 
@@ -48,6 +49,8 @@ const Login = () => {
 
     if (paramRole && roleMap[paramRole.toLowerCase()]) {
       setSelectedRole(roleMap[paramRole.toLowerCase()]);
+    } else if (storedRole && roleMap[storedRole.toLowerCase()]) {
+      setSelectedRole(roleMap[storedRole.toLowerCase()]);
     } else if (referrer.toLowerCase().includes('owner')) {
       setSelectedRole('OWNER');
     } else if (referrer.toLowerCase().includes('tenant') || referrer.toLowerCase().includes('renter')) {
